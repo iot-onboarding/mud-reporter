@@ -65,15 +65,15 @@ Table of Contents
      2.1.  The mud-reporter-extension augmentation to the MUD YANG
            model . . . . . . . . . . . . . . . . . . . . . . . . . .   4
      2.2.  The Reporter record format  . . . . . . . . . . . . . . .   6
-   3.  RESTful interface at the collector  . . . . . . . . . . . . .  10
+   3.  RESTful interface at the collector  . . . . . . . . . . . . .  11
    4.  Examples  . . . . . . . . . . . . . . . . . . . . . . . . . .  11
    5.  Privacy Considerations  . . . . . . . . . . . . . . . . . . .  11
-   6.  Security Considerations . . . . . . . . . . . . . . . . . . .  11
+   6.  Security Considerations . . . . . . . . . . . . . . . . . . .  12
    7.  References  . . . . . . . . . . . . . . . . . . . . . . . . .  12
      7.1.  Normative References  . . . . . . . . . . . . . . . . . .  12
      7.2.  Informative References  . . . . . . . . . . . . . . . . .  12
-   Appendix A.  Changes from Earlier Versions  . . . . . . . . . . .  12
-   Authors' Addresses  . . . . . . . . . . . . . . . . . . . . . . .  12
+   Appendix A.  Changes from Earlier Versions  . . . . . . . . . . .  13
+   Authors' Addresses  . . . . . . . . . . . . . . . . . . . . . . .  13
 
 1.  Introduction
 
@@ -172,24 +172,33 @@ Internet-Draft                MUD Reporter                     June 2019
 
    module: ietf-mud-reporter
      +--rw mud-reporter
-        +--rw mudurl         inet:uri
-        +--rw mud-records
+        +--rw mudurl?       inet:uri
+        +--rw mud-report* [time]
            +--rw time                 yang:timestamp
+           +--rw opaqueidentifier?    string
+           +--rw direction?           enumeration
            +--rw mycontrollers?       uint32
            +--rw controllers* [uri]
-           |  +--rw uri      inet:uri
-           |  +--rw count?   uint32
+           |  +--rw uri          inet:uri
+           |  +--rw count?       uint32
+           |  +--rw ipaddress?   inet:ip-address
            +--rw samemanufacturers?   uint32
            +--rw manufacturers* [authority]
            |  +--rw authority    inet:host
            |  +--rw count?       uint32
+           |  +--rw ipaddress?   inet:ip-address
            +--rw models* [uri]
-           |  +--rw uri      inet:uri
-           |  +--rw count?   uint32
+           |  +--rw uri          inet:uri
+           |  +--rw count?       uint32
+           |  +--rw ipaddress?   inet:ip-address
            +--rw domains* [hostname]
-              +--rw hostname        inet:host
-              +--rw ip-addresses*   inet:ip-address
-
+           |  +--rw hostname        inet:host
+           |  +--rw ip-addresses*   inet:ip-address
+           +--rw manufacturer?        string
+           +--rw model?               string
+           +--rw local-networks?      boolean
+           +--rw controller?          string
+           +--rw drop-count?          uint32
 
 
 2.1.  The mud-reporter-extension augmentation to the MUD YANG model
@@ -209,6 +218,14 @@ Internet-Draft                MUD Reporter                     June 2019
     }
 
     organization
+
+
+
+Lear & Ranganathan      Expires December 30, 2019               [Page 4]
+
+Internet-Draft                MUD Reporter                     June 2019
+
+
       "IETF OPSAWG (Ops Area) Working Group";
     contact
       "WG Web: http://tools.ietf.org/wg/opsawg/
@@ -217,14 +234,6 @@ Internet-Draft                MUD Reporter                     June 2019
        lear@cisco.com
       ";
     description
-
-
-
-
-Lear & Ranganathan      Expires December 30, 2019               [Page 4]
-
-Internet-Draft                MUD Reporter                     June 2019
-
 
       "This YANG module augments the ietf-mud model to provide for two
        optional lists to indicate that this device type may be used as
@@ -265,6 +274,14 @@ Internet-Draft                MUD Reporter                     June 2019
           leaf report-uri {
             type inet:uri;
             description
+
+
+
+Lear & Ranganathan      Expires December 30, 2019               [Page 5]
+
+Internet-Draft                MUD Reporter                     June 2019
+
+
                "Restful endpoint for reporter information.";
             }
           leaf frequency {
@@ -274,14 +291,6 @@ Internet-Draft                MUD Reporter                     June 2019
             description
               "The minimum period of time in minutes that a deployment
                should report.";
-
-
-
-Lear & Ranganathan      Expires December 30, 2019               [Page 5]
-
-Internet-Draft                MUD Reporter                     June 2019
-
-
           }
         }
     }
@@ -296,40 +305,31 @@ Internet-Draft                MUD Reporter                     June 2019
 
 2.2.  The Reporter record format
 
- <CODE BEGINS>file "ietf-mud-reporter@2019-06-21.yang"
- module ietf-mud-reporter {
-   yang-version 1.1;
-   namespace "urn:ietf:params:xml:ns:yang:ietf-mud-reporter";
-   prefix mud-reporter;
+   <CODE BEGINS>file "ietf-mud-reporter@2019-06-21.yang"
+   module ietf-mud-reporter {
+     yang-version 1.1;
+     namespace "urn:ietf:params:xml:ns:yang:ietf-mud-reporter";
+     prefix mud-reporter;
 
-   import ietf-inet-types {
-     prefix "inet";
-   }
+     import ietf-inet-types {
+       prefix inet;
+     }
+     import ietf-yang-types {
+       prefix yang;
+     }
 
-   import ietf-yang-types {
-      prefix yang;
-   }
+     organization
+       "IETF OPSAWG (Ops Area) Working Group";
+     contact
+       "WG Web: http://tools.ietf.org/wg/opsawg/
+        WG List: opsawg@ietf.org
+        Author: Eliot Lear
+        lear@cisco.com
+       ";
+     description
+       "This YANG module specifies the reporting format for MUD managers
+        to use when they are reporting to manufacturers.
 
-   organization
-     "IETF OPSAWG (Ops Area) Working Group";
-   contact
-     "WG Web: http://tools.ietf.org/wg/opsawg/
-      WG List: opsawg@ietf.org
-      Author: Eliot Lear
-      lear@cisco.com
-     ";
-   description
-
-     "This YANG module specifies the reporting format for MUD managers
-      to use when they are reporting to manufacturers.
-
-      Copyright (c) 2019 IETF Trust and the persons identified as
-      authors of the code.  All rights reserved.
-
-      Redistribution and use in source and binary forms, with or
-      without modification, is permitted pursuant to, and subject to
-      the license terms contained in, the Simplified BSD License set
-      forth in Section 4.c of the IETF Trust's Legal Provisions
 
 
 
@@ -338,54 +338,54 @@ Lear & Ranganathan      Expires December 30, 2019               [Page 6]
 Internet-Draft                MUD Reporter                     June 2019
 
 
-      Relating to IETF Documents
-        (https://trustee.ietf.org/license-info).
+        Copyright (c) 2019 IETF Trust and the persons identified as
+        authors of the code.  All rights reserved.
 
-      This version of this YANG module is part of RFC XXXX
-      (https://www.rfc-editor.org/info/rfcXXXX); see the RFC itself
-       for full legal notices.
+        Redistribution and use in source and binary forms, with or
+        without modification, is permitted pursuant to, and subject to
+        the license terms contained in, the Simplified BSD License set
+        forth in Section 4.c of the IETF Trust's Legal Provisions
+        Relating to IETF Documents
+          (https://trustee.ietf.org/license-info).
 
-      The key words 'MUST', 'MUST NOT', 'REQUIRED', 'SHALL', 'SHALL
-      NOT', 'SHOULD', 'SHOULD NOT', 'RECOMMENDED', 'NOT RECOMMENDED',
-     'MAY', and 'OPTIONAL' in this document are to be interpreted as
-      described in BCP 14 (RFC 2119) (RFC 8174) when, and only when,
-     they appear in all capitals, as shown here.
- ";
+        This version of this YANG module is part of RFC XXXX
+        (https://www.rfc-editor.org/info/rfcXXXX); see the RFC itself
+         for full legal notices.
 
-   revision 2019-06-21 {
-     description
-       "Initial proposed standard.";
-     reference "RFC XXXX: Extension for MUD Reporting";
-   }
+        The key words 'MUST', 'MUST NOT', 'REQUIRED', 'SHALL', 'SHALL
+        NOT', 'SHOULD', 'SHOULD NOT', 'RECOMMENDED', 'NOT RECOMMENDED',
+        'MAY', and 'OPTIONAL' in this document are to be interpreted as
+        described in BCP 14 (RFC 2119) (RFC 8174) when, and only when,
+        they appear in all capitals, as shown here.
+       ";
 
-   container mud-reporter {
-      description "MUD reporter container.";
+     revision 2019-06-21 {
+       description
+         "Initial proposed standard.";
+       reference
+         "RFC XXXX: Extension for MUD Reporting";
+     }
 
-      leaf mudurl {
-           type inet:uri;
-           description
-             "The MUD-URL for which the report is being sent.";
+     container mud-reporter {
+       description
+         "MUD reporter container.";
+       leaf mudurl {
+         type inet:uri;
+         description
+           "The MUD-URL for which the report is being sent.";
        }
-     container mud-records {
-         description "individual records.";
-
-          leaf time {
+       list mud-report {
+         key "time";
+         description
+           "individual records.";
+         leaf time {
            type yang:timestamp;
-           description "when this happened.";
-           }
-
-          leaf direction {
-        type enumeration {
-         description "which way packet is going.";
-         enum to-device {
-           description "packet was traveling toward the device";
-           }
-              enum from-device {
-           description "packet was traveling away from the device";
-          }
-      }
-           description "which way packet is going";
-           }
+           description
+             "when this happened.";
+         }
+         leaf opaqueidentifier {
+           type string;
+           description
 
 
 
@@ -394,54 +394,54 @@ Lear & Ranganathan      Expires December 30, 2019               [Page 7]
 Internet-Draft                MUD Reporter                     June 2019
 
 
+             "This is an identifier that maps to a particular
+              device.  Its value MUST NOT be mappable back to
+              any identifying information about the device.  It
+              may be a suitable hash, such as SHA256.";
+         }
+         leaf direction {
+           type enumeration {
+             enum to-device {
+               description
+                 "packet was traveling toward the device";
+             }
+             enum from-device {
+               description
+                 "packet was traveling away from the device";
+             }
+           }
+           description
+             "which way packet is going";
+         }
          leaf mycontrollers {
            type uint32;
-           description "how many entries for my-controller.";
-          }
-
+           description
+             "how many entries for my-controller.";
+         }
          list controllers {
            key "uri";
-           description "list of controllers and how many there were.";
+           description
+             "list of controllers and how many there were.";
            leaf uri {
-                type inet:uri;
-                description "the class URI of this controller";
-                }
+             type inet:uri;
+             description
+               "the class URI of this controller";
+           }
            leaf count {
-                type uint32;
-                description "number of devices serving this class.";
-       }
+             type uint32;
+             description
+               "number of devices serving this class.";
+           }
            leaf ipaddress {
-                type inet:ip-address;
-                description
-                   "IP address of the controller.  Note that the MUD
-                    reporter MUST NOT transmit this contents of this
-                    node to the manufacturer.";
+             type inet:ip-address;
+             description
+               "IP address of the controller.  Note that the MUD
+                reporter MUST NOT transmit this contents of this
+                node to the manufacturer.";
            }
          }
          leaf samemanufacturers {
-              type uint32;
-              description "number of devices matching same
-                           manufacturer.";
-         }
-         list manufacturers {
-           key "authority";
-           description "list of models and how many there were.";
-           leaf authority {
-                type inet:host;
-                description "the manufacturer domain";
-                }
-           leaf count {
-                type uint32;
-                description "number of devices serving this class.";
-       }
-           leaf ipaddress {
-                type inet:ip-address;
-                description
-                   "IP address of the controller.  Note that the MUD
-                    reporter MUST NOT transmit this contents of this
-                    node to the manufacturer.";
-           }
-         }
+           type uint32;
 
 
 
@@ -450,54 +450,54 @@ Lear & Ranganathan      Expires December 30, 2019               [Page 8]
 Internet-Draft                MUD Reporter                     June 2019
 
 
-         list models {
-           key "uri";
-           description "list of models and how many there were.";
-           leaf uri {
-                type inet:uri;
-                description "the URI of this model";
-                }
+           description
+             "number of devices matching same
+              manufacturer.";
+         }
+         list manufacturers {
+           key "authority";
+           description
+             "list of models and how many there were.";
+           leaf authority {
+             type inet:host;
+             description
+               "the manufacturer domain";
+           }
            leaf count {
-                type uint32;
-                description "number of devices serving this class.";
+             type uint32;
+             description
+               "number of devices serving this class.";
            }
            leaf ipaddress {
-                type inet:ip-address;
-                description
-                   "IP address of the controller.  Note that the MUD
-                    reporter MUST NOT transmit this contents of this
-                    node to the manufacturer.";
+             type inet:ip-address;
+             description
+               "IP address of the controller.  Note that the MUD
+                reporter MUST NOT transmit this contents of this
+                node to the manufacturer.";
            }
-     }
-         list domains {
-           key "hostname";
-           description "list of hosts, and ip addresses if known.";
-           leaf hostname {
-                type inet:host;
-                description "the host listed";
-                }
-           leaf-list ip-addresses {
-                type inet:ip-address;
-                description "ipv4 or v6 address mapping for this host if
-                             known.";
+         }
+         list models {
+           key "uri";
+           description
+             "list of models and how many there were.";
+           leaf uri {
+             type inet:uri;
+             description
+               "the URI of this model";
            }
-        }
-      }
-   }
-
-
-   grouping class-drop-count {
-      description
-           "Destination fields of acl violating  packet are classfied.";
-
-      leaf manufacturer {
-        type string;
-        description "manufacturer name";
-      }
-
-      leaf model {
-        type string;
-        description "model name";
+           leaf count {
+             type uint32;
+             description
+               "number of devices serving this class.";
+           }
+           leaf ipaddress {
+             type inet:ip-address;
+             description
+               "IP address of the controller.  Note that the MUD
+                reporter MUST NOT transmit this contents of this
+                node to the manufacturer.";
+           }
+         }
 
 
 
@@ -506,54 +506,54 @@ Lear & Ranganathan      Expires December 30, 2019               [Page 9]
 Internet-Draft                MUD Reporter                     June 2019
 
 
-      }
-
-      leaf local-networks {
-         type boolean;
-         description "this packet matches the local networks
-                      classification";
-      }
-
-      leaf controller {
-        type string;
-        description "controller name";
-      }
-
-      leaf drop-count {
-         type uint32;
-        description "number of packets dropped for this classification";
-      }
-   }
-
-   container drop-counts {
-     description "Packet drops for various reasons.";
-      list packet-drops {
-         description "drop counts for packets in different
-         classes, Packets that violate access rules are
-         logged here. ";
+         list domains {
+           key "hostname";
+           description
+             "list of hosts, and ip addresses if known.";
+           leaf hostname {
+             type inet:host;
+             description
+               "the host listed";
+           }
+           leaf-list ip-addresses {
+             type inet:ip-address;
+             description
+               "ipv4 or v6 address mapping for this host if
+                known.";
+           }
+         }
          uses class-drop-count;
-      }
-   }
-  }
- }
- <CODE ENDS>
+       }
+     }
 
-3.  RESTful interface at the collector
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+     grouping class-drop-count {
+       description
+         "Destination fields of acl violating  packet are classfied.";
+       leaf manufacturer {
+         type string;
+         description
+           "manufacturer name";
+       }
+       leaf model {
+         type string;
+         description
+           "model name";
+       }
+       leaf local-networks {
+         type boolean;
+         description
+           "this packet matches the local networks
+            classification";
+       }
+       leaf controller {
+         type string;
+         description
+           "controller name";
+       }
+       leaf drop-count {
+         type uint32;
+         description
+           "number of packets dropped for this classification";
 
 
 
@@ -561,6 +561,13 @@ Lear & Ranganathan      Expires December 30, 2019              [Page 10]
 
 Internet-Draft                MUD Reporter                     June 2019
 
+
+       }
+     }
+   }
+   <CODE ENDS>
+
+3.  RESTful interface at the collector
 
    <CODE BEGINS>file "ietf-mud-reporter-collector@2019-06-21.yang"
    module mud-reporter-collector {
@@ -599,6 +606,18 @@ Internet-Draft                MUD Reporter                     June 2019
    deployment must determine which packets from a given device have
    either been or would be dropped due to an administrative filter rule.
 
+
+
+
+
+
+
+
+Lear & Ranganathan      Expires December 30, 2019              [Page 11]
+
+Internet-Draft                MUD Reporter                     June 2019
+
+
 6.  Security Considerations
 
    All security considerations of [RFC8520] apply equally to this
@@ -610,13 +629,6 @@ Internet-Draft                MUD Reporter                     June 2019
    administrator to identify candidates for controller selection.
 
    IANA Considerations ===================
-
-
-
-Lear & Ranganathan      Expires December 30, 2019              [Page 11]
-
-Internet-Draft                MUD Reporter                     June 2019
-
 
    The IANA is requested to add "controller-candidate" to the MUD
    extensions registry as follows:
@@ -654,18 +666,6 @@ Internet-Draft                MUD Reporter                     June 2019
               (DMARC)", RFC 7489, DOI 10.17487/RFC7489, March 2015,
               <https://www.rfc-editor.org/info/rfc7489>.
 
-Appendix A.  Changes from Earlier Versions
-
-   Draft -00:
-
-   o  Initial revision
-
-Authors' Addresses
-
-
-
-
-
 
 
 
@@ -673,6 +673,14 @@ Lear & Ranganathan      Expires December 30, 2019              [Page 12]
 
 Internet-Draft                MUD Reporter                     June 2019
 
+
+Appendix A.  Changes from Earlier Versions
+
+   Draft -00:
+
+   o  Initial revision
+
+Authors' Addresses
 
    Eliot Lear
    Cisco Systems
@@ -692,14 +700,6 @@ Internet-Draft                MUD Reporter                     June 2019
 
    Phone: +1 301 975 2857
    Email: mranga@nist.gov
-
-
-
-
-
-
-
-
 
 
 
