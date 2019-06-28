@@ -21,6 +21,15 @@ author:
     country: Switzerland
     phone: +41 44 878 9200
     email: lear@cisco.com
+ -
+    ins: M. Ranganathan
+    name: Mudumbai Ranganathan
+    org: National Institute of Standards and Technology
+    street:  100 Bureau Dr.
+    city: Gaithersburg
+    country:  U.S.A
+    phone: +1 301 975 2857
+    email: mranga@nist.gov
 
 normative:
    RFC6991:
@@ -55,8 +64,8 @@ getting the access it needs.  Some examples include:
  * The MUD file permits access only to same-manufacturer or model but
    there is none.
  * The MUD file permits access to a particular Internet service, but
-   the name of that service resolved to something that was not
-   permitted.
+   the name of that service has not been resolved (or name resolution 
+   failed).
  * The administrator overrode the recommendations in the MUD file.
 
 This memo sets out to provide manufacturers indications regarding what
@@ -227,8 +236,6 @@ The Reporter record format
 --------------------------
 
 ~~~~~~~~~
-
-
 <CODE BEGINS>file "ietf-mud-reporter@2019-06-21.yang"
 module ietf-mud-reporter {
   yang-version 1.1;
@@ -292,30 +299,30 @@ module ietf-mud-reporter {
 	  description
 	    "The MUD-URL for which the report is being sent.";
       }  
-     container mud-records {
+    container mud-records {
         description "individual records.";
 
-	leaf time {
+	 leaf time {
 	  type yang:timestamp;
 	  mandatory true;
 	  description "when this happened.";
 	  }
 
 	 leaf direction {
-     	    type enumerated {
-  	      enum to-device {
+       type enumerated {
+  	        enum to-device {
  	     	  description "packet was traveling toward the device";
-	     }
-	     enum from-device {
+	        }
+	       enum from-device {
 	     	  description "packet was traveling away from the device";
-	     }
          }
+    }
 
 	
 	leaf mycontrollers {
 	  type uint32;
 	  description "how many entries for my-controller.";
-	  }
+	 }
 
 	list controllers {
 	  key "uri";
@@ -327,6 +334,7 @@ module ietf-mud-reporter {
 	  leaf count {
 	       type uint32;
 	       description "number of devices serving this class.";
+      }
 	  leaf ipaddress {
 	       type inet:ip-address;
 	       description
@@ -350,6 +358,7 @@ module ietf-mud-reporter {
 	  leaf count {
 	       type uint32;
 	       description "number of devices serving this class.";
+      }
 	  leaf ipaddress {
 	       type inet:ip-address;
 	       description
@@ -375,7 +384,8 @@ module ietf-mud-reporter {
 	          "IP address of the controller.  Note that the MUD
 		   reporter MUST NOT transmit this contents of this
 		   node to the manufacturer.";
-	}	
+	  }	
+    }
 	list domains {
 	  key "hostname";
 	  description "list of hosts, and ip addresses if known.";
@@ -391,6 +401,47 @@ module ietf-mud-reporter {
        }
      }
   }
+
+
+  grouping class-drop-count {
+     description 
+          "Destination fields of acl violating  packet are classfied."; 
+
+     leaf manufacturer {
+       description "manufacturer name";
+       type string;
+     }
+
+     leaf model {
+       description "manufacturer name";
+       type string;
+     }
+
+     leaf local-networks {
+       description "this packet matches the local networks classification";
+       type boolean;
+     }
+
+     leaf controller {
+       description "controller name";
+       type string;
+     }
+
+     leaf drop-count {
+       description "number of packets dropped for this classification";
+        type uint32;
+     }
+  }
+
+  container drop-counts {
+     list packet-ddrops {
+        description "drop counts for packets in different classes, Packets that violate access rules are logged here. ";
+        uses class-drop-count;
+     }
+  }
+  
+  
+  
   grouping l3l4info {
      description "Various L3/L4 information that might cause a drop."
      leaf ipsrc {
@@ -416,16 +467,32 @@ module ietf-mud-reporter {
 	  description "destination port";
       }
    }
+ }
 }
 <CODE ENDS>
 ~~~~~~~~~
 
 
-RESTful interface
-=================
-
-Insert stuff here.
-
+RESTful interface at the collector
+==================================
+~~~~~~~~~
+<CODE BEGINS>file "ietf-mud-repor-collector@2019-06-21.yang"
+module mud-reporter-collector {
+    import ietf-mud-reporter {
+        prefix "reporter";
+    }
+    rpc post-mud-report {
+      description 
+         "Rpc interface that must be supported by collection point
+      input {
+        leaf mud-report {
+            type reporter:mud-reporter;
+        }
+      }
+    }
+}
+<CODE ENDS>
+~~~~~~~~~
 
 
 Examples
