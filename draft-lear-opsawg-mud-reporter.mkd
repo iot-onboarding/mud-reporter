@@ -114,6 +114,7 @@ module: ietf-mud-controller-candidate
 Finally the logging format is defined as follows:
 
 ~~~~~~~~~
+
 module: ietf-mud-reporter
   +--rw mud-reporter
      +--rw mudurl?       inet:uri
@@ -142,6 +143,7 @@ module: ietf-mud-reporter
         +--rw model?               string
         +--rw local-networks?      boolean
         +--rw controller?          string
+        +--rw default?             boolean
         +--rw drop-count?          uint32
 
 ~~~~~~~~~
@@ -434,7 +436,8 @@ module ietf-mud-reporter {
 
   grouping class-drop-count {
     description
-      "Destination fields of acl violating  packet are classfied.";
+      "Src (in case packet is Inbound to device) or Destination (in case packet is outbound from device)
+       fields of acl violating  packet are classfied.";
     leaf manufacturer {
       type string;
       description
@@ -455,6 +458,14 @@ module ietf-mud-reporter {
       type string;
       description
         "controller name";
+    }
+    leaf default {
+      description
+        "Default classification -- Could not classify dropped packet
+        using one of the classifications above:
+         e.g. if device is trying to access host that is not permissible
+         according to any dns Acl. ";
+      type boolean;
     }
     leaf drop-count {
       type uint32;
