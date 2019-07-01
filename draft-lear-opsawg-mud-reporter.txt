@@ -562,9 +562,7 @@ Lear & Ranganathan       Expires January 2, 2020               [Page 10]
 Internet-Draft                MUD Reporter                     July 2019
 
 
-        using one of the classifications above:
-         e.g. if device is trying to access host that is not permissible
-         according to any dns Acl. ";
+        using one of the classifications above. ";
       type boolean;
     }
     leaf drop-count {
@@ -610,6 +608,8 @@ Internet-Draft                MUD Reporter                     July 2019
    URL is located at a particular deployment.  In addition, as of this
    draft, reportable events include only administratively dropped
    packets, and the times they were dropped.
+
+
 
 
 

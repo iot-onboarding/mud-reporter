@@ -462,9 +462,7 @@ module ietf-mud-reporter {
     leaf default {
       description
         "Default classification -- Could not classify dropped packet
-        using one of the classifications above:
-         e.g. if device is trying to access host that is not permissible
-         according to any dns Acl. ";
+        using one of the classifications above. ";
       type boolean;
     }
     leaf drop-count {
