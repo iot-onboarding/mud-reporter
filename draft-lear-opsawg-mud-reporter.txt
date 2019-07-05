@@ -5,12 +5,12 @@
 Network Working Group                                            E. Lear
 Internet-Draft                                             Cisco Systems
 Intended status: Standards Track                          M. Ranganathan
-Expires: December 30, 2019                                          NIST
-                                                           June 28, 2019
+Expires: January 6, 2020                                            NIST
+                                                           July 05, 2019
 
 
                    Reporting MUD behavior to vendors
-             draft-lear-opsawg-mud-controller-candidates-00
+                   draft-lear-opsawg-mud-reporter-00
 
 Abstract
 
@@ -34,7 +34,7 @@ Status of This Memo
    time.  It is inappropriate to use Internet-Drafts as reference
    material or to cite them other than as "work in progress."
 
-   This Internet-Draft will expire on December 30, 2019.
+   This Internet-Draft will expire on January 6, 2020.
 
 Copyright Notice
 
@@ -53,9 +53,9 @@ Copyright Notice
 
 
 
-Lear & Ranganathan      Expires December 30, 2019               [Page 1]
+Lear & Ranganathan       Expires January 6, 2020                [Page 1]
 
-Internet-Draft                MUD Reporter                     June 2019
+Internet-Draft                MUD Reporter                     July 2019
 
 
 Table of Contents
@@ -66,14 +66,14 @@ Table of Contents
            model . . . . . . . . . . . . . . . . . . . . . . . . . .   4
      2.2.  The Reporter record format  . . . . . . . . . . . . . . .   6
    3.  RESTful interface at the collector  . . . . . . . . . . . . .  11
-   4.  Examples  . . . . . . . . . . . . . . . . . . . . . . . . . .  11
-   5.  Privacy Considerations  . . . . . . . . . . . . . . . . . . .  11
-   6.  Security Considerations . . . . . . . . . . . . . . . . . . .  12
-   7.  References  . . . . . . . . . . . . . . . . . . . . . . . . .  12
-     7.1.  Normative References  . . . . . . . . . . . . . . . . . .  12
-     7.2.  Informative References  . . . . . . . . . . . . . . . . .  12
-   Appendix A.  Changes from Earlier Versions  . . . . . . . . . . .  13
-   Authors' Addresses  . . . . . . . . . . . . . . . . . . . . . . .  13
+   4.  Examples  . . . . . . . . . . . . . . . . . . . . . . . . . .  12
+   5.  Privacy Considerations  . . . . . . . . . . . . . . . . . . .  12
+   6.  Security Considerations . . . . . . . . . . . . . . . . . . .  13
+   7.  References  . . . . . . . . . . . . . . . . . . . . . . . . .  13
+     7.1.  Normative References  . . . . . . . . . . . . . . . . . .  13
+     7.2.  Informative References  . . . . . . . . . . . . . . . . .  13
+   Appendix A.  Changes from Earlier Versions  . . . . . . . . . . .  14
+   Authors' Addresses  . . . . . . . . . . . . . . . . . . . . . . .  14
 
 1.  Introduction
 
@@ -109,9 +109,9 @@ Table of Contents
 
 
 
-Lear & Ranganathan      Expires December 30, 2019               [Page 2]
+Lear & Ranganathan       Expires January 6, 2020                [Page 2]
 
-Internet-Draft                MUD Reporter                     June 2019
+Internet-Draft                MUD Reporter                     July 2019
 
 
    This memo specifies a YANG model for reporting and a means for
@@ -165,9 +165,9 @@ Internet-Draft                MUD Reporter                     June 2019
 
 
 
-Lear & Ranganathan      Expires December 30, 2019               [Page 3]
+Lear & Ranganathan       Expires January 6, 2020                [Page 3]
 
-Internet-Draft                MUD Reporter                     June 2019
+Internet-Draft                MUD Reporter                     July 2019
 
 
    module: ietf-mud-reporter
@@ -204,7 +204,7 @@ Internet-Draft                MUD Reporter                     June 2019
 2.1.  The mud-reporter-extension augmentation to the MUD YANG model
 
   <CODE BEGINS>file "ietf-mud-reporter-extension@2019-06-21.yang"
-  module ietf-mud-controller-extension {
+  module ietf-mud-reporter-extension {
     yang-version 1.1;
     namespace "urn:ietf:params:xml:ns:yang:ietf-mud-reporter-extension";
     prefix mud-reporter-extension;
@@ -221,9 +221,9 @@ Internet-Draft                MUD Reporter                     June 2019
 
 
 
-Lear & Ranganathan      Expires December 30, 2019               [Page 4]
+Lear & Ranganathan       Expires January 6, 2020                [Page 4]
 
-Internet-Draft                MUD Reporter                     June 2019
+Internet-Draft                MUD Reporter                     July 2019
 
 
       "IETF OPSAWG (Ops Area) Working Group";
@@ -277,16 +277,18 @@ Internet-Draft                MUD Reporter                     June 2019
 
 
 
-Lear & Ranganathan      Expires December 30, 2019               [Page 5]
+Lear & Ranganathan       Expires January 6, 2020                [Page 5]
 
-Internet-Draft                MUD Reporter                     June 2019
+Internet-Draft                MUD Reporter                     July 2019
 
 
                "Restful endpoint for reporter information.";
             }
           leaf frequency {
-            type uint32;
-            range "60..max";
+            type uint32
+            {
+              range "60..max";
+            }
             default 1440;
             description
               "The minimum period of time in minutes that a deployment
@@ -328,15 +330,15 @@ Internet-Draft                MUD Reporter                     June 2019
        ";
      description
        "This YANG module specifies the reporting format for MUD managers
-        to use when they are reporting to manufacturers.
 
 
 
-
-Lear & Ranganathan      Expires December 30, 2019               [Page 6]
+Lear & Ranganathan       Expires January 6, 2020                [Page 6]
 
-Internet-Draft                MUD Reporter                     June 2019
+Internet-Draft                MUD Reporter                     July 2019
 
+
+        to use when they are reporting to manufacturers.
 
         Copyright (c) 2019 IETF Trust and the persons identified as
         authors of the code.  All rights reserved.
@@ -367,6 +369,12 @@ Internet-Draft                MUD Reporter                     June 2019
      }
 
      container mud-reporter {
+       uses mud-reporter-grouping;
+       description "Reporter Information.";
+     }
+
+     grouping mud-reporter-grouping   {
+
        description
          "MUD reporter container.";
        leaf mudurl {
@@ -378,6 +386,14 @@ Internet-Draft                MUD Reporter                     June 2019
          key "time";
          description
            "individual records.";
+
+
+
+Lear & Ranganathan       Expires January 6, 2020                [Page 7]
+
+Internet-Draft                MUD Reporter                     July 2019
+
+
          leaf time {
            type yang:timestamp;
            description
@@ -386,14 +402,6 @@ Internet-Draft                MUD Reporter                     June 2019
          leaf opaqueidentifier {
            type string;
            description
-
-
-
-Lear & Ranganathan      Expires December 30, 2019               [Page 7]
-
-Internet-Draft                MUD Reporter                     June 2019
-
-
              "This is an identifier that maps to a particular
               device.  Its value MUST NOT be mappable back to
               any identifying information about the device.  It
@@ -434,6 +442,14 @@ Internet-Draft                MUD Reporter                     June 2019
            }
            leaf ipaddress {
              type inet:ip-address;
+
+
+
+Lear & Ranganathan       Expires January 6, 2020                [Page 8]
+
+Internet-Draft                MUD Reporter                     July 2019
+
+
              description
                "IP address of the controller.  Note that the MUD
                 reporter MUST NOT transmit this contents of this
@@ -442,14 +458,6 @@ Internet-Draft                MUD Reporter                     June 2019
          }
          leaf samemanufacturers {
            type uint32;
-
-
-
-Lear & Ranganathan      Expires December 30, 2019               [Page 8]
-
-Internet-Draft                MUD Reporter                     June 2019
-
-
            description
              "number of devices matching same
               manufacturer.";
@@ -490,6 +498,14 @@ Internet-Draft                MUD Reporter                     June 2019
              description
                "number of devices serving this class.";
            }
+
+
+
+Lear & Ranganathan       Expires January 6, 2020                [Page 9]
+
+Internet-Draft                MUD Reporter                     July 2019
+
+
            leaf ipaddress {
              type inet:ip-address;
              description
@@ -498,14 +514,6 @@ Internet-Draft                MUD Reporter                     June 2019
                 node to the manufacturer.";
            }
          }
-
-
-
-Lear & Ranganathan      Expires December 30, 2019               [Page 9]
-
-Internet-Draft                MUD Reporter                     June 2019
-
-
          list domains {
            key "hostname";
            description
@@ -546,6 +554,14 @@ Internet-Draft                MUD Reporter                     June 2019
             classification";
        }
        leaf controller {
+
+
+
+Lear & Ranganathan       Expires January 6, 2020               [Page 10]
+
+Internet-Draft                MUD Reporter                     July 2019
+
+
          type string;
          description
            "controller name";
@@ -554,38 +570,83 @@ Internet-Draft                MUD Reporter                     June 2019
          type uint32;
          description
            "number of packets dropped for this classification";
-
-
-
-Lear & Ranganathan      Expires December 30, 2019              [Page 10]
-
-Internet-Draft                MUD Reporter                     June 2019
-
-
        }
      }
    }
+
    <CODE ENDS>
 
 3.  RESTful interface at the collector
 
-   <CODE BEGINS>file "ietf-mud-reporter-collector@2019-06-21.yang"
-   module mud-reporter-collector {
-       import ietf-mud-reporter {
-           prefix "reporter";
-       }
-       rpc post-mud-report {
-         description
-            "Rpc interface that must be supported by collection point.";
-         input {
-           leaf mud-report {
-               type reporter:mud-reporter;
-           }
+ <CODE BEGINS>file "ietf-mud-reporter-collector@2019-06-21.yang"
+ module ietf-mud-reporter-collector {
+    yang-version 1.1;
+    namespace "urn:ietf:params:xml:ns:yang:ietf-mud-reporter-collector";
+    prefix "mud-collector";
+
+    import ietf-mud-reporter {
+         prefix "reporter";
+     }
+   organization
+     "IETF OPSAWG (Ops Area) Working Group";
+   contact
+     "WG Web: http://tools.ietf.org/wg/opsawg/
+      WG List: opsawg@ietf.org
+      Author: Eliot Lear
+      lear@cisco.com
+      Author: Mudumbai Ranganathan
+      mranga@nist.gov
+     ";
+   description
+     "This YANG module specifies the reporting format for MUD managers
+      to use when they are reporting to manufacturers.
+
+      Copyright (c) 2019 IETF Trust and the persons identified as
+      authors of the code.  All rights reserved.
+
+      Redistribution and use in source and binary forms, with or
+      without modification, is permitted pursuant to, and subject to
+      the license terms contained in, the Simplified BSD License set
+      forth in Section 4.c of the IETF Trust's Legal Provisions
+      Relating to IETF Documents
+        (https://trustee.ietf.org/license-info).
+
+
+
+Lear & Ranganathan       Expires January 6, 2020               [Page 11]
+
+Internet-Draft                MUD Reporter                     July 2019
+
+
+      This version of this YANG module is part of RFC XXXX
+      (https://www.rfc-editor.org/info/rfcXXXX); see the RFC itself
+       for full legal notices.
+
+      The key words 'MUST', 'MUST NOT', 'REQUIRED', 'SHALL', 'SHALL
+      NOT', 'SHOULD', 'SHOULD NOT', 'RECOMMENDED', 'NOT RECOMMENDED',
+      'MAY', and 'OPTIONAL' in this document are to be interpreted as
+      described in BCP 14 (RFC 2119) (RFC 8174) when, and only when,
+      they appear in all capitals, as shown here.
+     ";
+   revision 2019-06-21 {
+     description
+       "Initial proposed standard.";
+     reference
+       "RFC XXXX: Extension for MUD Reporting";
+   }
+     rpc post-mud-report {
+       description
+          "Rpc interface that must be supported by collection point.";
+       input {
+         container mud-report {
+           uses  reporter:mud-reporter-grouping;
+           description "MUD report";
          }
        }
-   }
+     }
+ }
 
-   <CODE ENDS>
+ <CODE ENDS>
 
 
 4.  Examples
@@ -608,14 +669,9 @@ Internet-Draft                MUD Reporter                     June 2019
 
 
 
-
-
-
-
-
-Lear & Ranganathan      Expires December 30, 2019              [Page 11]
+Lear & Ranganathan       Expires January 6, 2020               [Page 12]
 
-Internet-Draft                MUD Reporter                     June 2019
+Internet-Draft                MUD Reporter                     July 2019
 
 
 6.  Security Considerations
@@ -669,9 +725,9 @@ Internet-Draft                MUD Reporter                     June 2019
 
 
 
-Lear & Ranganathan      Expires December 30, 2019              [Page 12]
+Lear & Ranganathan       Expires January 6, 2020               [Page 13]
 
-Internet-Draft                MUD Reporter                     June 2019
+Internet-Draft                MUD Reporter                     July 2019
 
 
 Appendix A.  Changes from Earlier Versions
@@ -725,4 +781,4 @@ Authors' Addresses
 
 
 
-Lear & Ranganathan      Expires December 30, 2019              [Page 13]
+Lear & Ranganathan       Expires January 6, 2020               [Page 14]
