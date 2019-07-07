@@ -5,6 +5,13 @@ DOCS=	draft-lear-opsawg-mud-reporter.txt \
 
 all: $(DOCS)
 
+clean:
+	rm -f draft-lear-opsawg-mud-reporter.xml
+	rm -f draft-lear-opsawg-mud-reporter.html
+	rm -f draft-lear-opsawg-mud-reporter.txt
+	rm -f *.yang
+
+
 %.xml:	%.mkd
 	kramdown-rfc2629 $< > $@
 %.html %.txt:	%.xml
