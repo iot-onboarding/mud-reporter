@@ -117,8 +117,7 @@ module: ietf-mud-controller-candidate
 Finally the logging format is defined as follows:
 
 ~~~~~~~~~
-
-module: ietf-mud-reporter
+ietf-mud-reporter
   +--rw mud-reporter
      +--rw mudurl?       inet:uri
      +--rw mud-report* [time]
@@ -136,17 +135,18 @@ module: ietf-mud-reporter
         +--rw domains* [hostname]
         |  +--rw hostname        string
         |  +--rw ip-addresses*   inet:ip-address
+        +--rw opaque-identifier*      string
         +--rw drop-counts* []
         |  +--rw (drop-type)?
         |  |  +--:(blocked)
+        |  |  |  +--rw ace-name?   string
+        |  |  +--:(tcp-blocked)
         |  |     +--rw ace-name?   string
         |  +--rw direction?        enumeration
         |  +--rw drop-count?       uint64
         +--rw match-counts* []
            +--rw ace-name?       string
            +--rw packet-count?   uint64
-
-
 ~~~~~~~~~
 
 
@@ -402,6 +402,14 @@ module ietf-mud-reporter {
         }
       }
 
+      leaf-list opaque-identifier {
+          type string;
+          description
+            "List of opaque identifiers 
+             for the devices generating this report. ";
+
+      }
+
       list drop-counts {
          uses drop-count;
       }
@@ -440,9 +448,15 @@ module ietf-mud-reporter {
       leaf ace-name {
          type string;
          description
-          "blocked packet - no mud rule matched 
-           (has a special ace-name of "NOMATCH") OR 
-           TCP connection initiated in the wrong direction.";
+          "No mud rule matched 
+           (has a special ace-name of NOMATCH)";
+        }
+      }
+    case tcp-blocked {
+      leaf ace-name {
+         type string;
+         description
+          "TCP connection initiated in the wrong direction.";
         }
       }
      }
