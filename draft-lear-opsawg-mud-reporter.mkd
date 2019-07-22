@@ -124,35 +124,28 @@ module: ietf-mud-reporter
      +--rw mud-report* [time]
         +--rw enforcement-point-id?   string
         +--rw time                    yang:timestamp
-        +--rw opaqueidentifier?       string
-        +--rw direction?              enumeration
         +--rw mycontrollers?          uint32
         +--rw controllers* [uri]
-        |  +--rw uri          inet:uri
-        |  +--rw count?       uint32
-        |  +--rw ipaddress?   inet:ip-address
+        |  +--rw uri      inet:uri
+        |  +--rw count?   uint32
         +--rw samemanufacturers?      uint32
-        +--rw manufacturers* [authority]
-        |  +--rw authority    inet:host
-        |  +--rw count?       uint32
-        |  +--rw ipaddress?   inet:ip-address
         +--rw models* [uri]
         |  +--rw uri          inet:uri
         |  +--rw count?       uint32
         |  +--rw ipaddress?   inet:ip-address
         +--rw domains* [hostname]
-        |  +--rw hostname        inet:host
+        |  +--rw hostname        string
         |  +--rw ip-addresses*   inet:ip-address
-        +--rw (drop-type)?
-        |  +--:(manufacturer)
-        |  +--:(model)
-        |  +--:(local-networks)
-        |  +--:(controller)
-        |  +--:(default)
-        +--rw drop-count?             uint64
-        +--rw ace-match-count* []
+        +--rw drop-counts* []
+        |  +--rw (drop-type)?
+        |  |  +--:(blocked)
+        |  |     +--rw ace-name?   string
+        |  +--rw direction?        enumeration
+        |  +--rw drop-count?       uint64
+        +--rw match-counts* []
            +--rw ace-name?       string
            +--rw packet-count?   uint64
+
 
 ~~~~~~~~~
 
