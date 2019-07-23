@@ -97,7 +97,11 @@ First, the extension name "reporter" is listed in the
 "extensions" array of the MUD file.
 
 Second, the "mud" container is augmented with a container that 
-points to where to report and how often.
+points to where to report. 
+
+The frequency of reporting is impelementation dependent. Impelemntations
+are encouraged to report when ever packet drops are noticed at the enforcement 
+point; however, this is not a strict requirement.
 
 This is done as follows:
 
@@ -107,43 +111,42 @@ module: ietf-mud-controller-candidate
   augment /mud:mud:
       +--rw reporter
           +--rw report-uri    inet:uri
-          +--rw frequency?    uint32
 
 ~~~~~~~~~
 
 Finally the logging format is defined as follows:
 
 ~~~~~~~~~
-module: ietf-mud-reporter
+ietf-mud-reporter
   +--rw mud-reporter
      +--rw mudurl?       inet:uri
      +--rw mud-report* [time]
-        +--rw time                 yang:timestamp
-        +--rw opaqueidentifier?    string
-        +--rw direction?           enumeration
-        +--rw mycontrollers?       uint32
+        +--rw enforcement-point-id?   string
+        +--rw time                    yang:timestamp
+        +--rw mycontrollers?          uint32
         +--rw controllers* [uri]
-        |  +--rw uri          inet:uri
-        |  +--rw count?       uint32
-        |  +--rw ipaddress?   inet:ip-address
-        +--rw samemanufacturers?   uint32
-        +--rw manufacturers* [authority]
-        |  +--rw authority    inet:host
-        |  +--rw count?       uint32
-        |  +--rw ipaddress?   inet:ip-address
+        |  +--rw uri      inet:uri
+        |  +--rw count?   uint32
+        +--rw samemanufacturers?      uint32
         +--rw models* [uri]
         |  +--rw uri          inet:uri
         |  +--rw count?       uint32
         |  +--rw ipaddress?   inet:ip-address
         +--rw domains* [hostname]
-        |  +--rw hostname        inet:host
+        |  +--rw hostname        string
         |  +--rw ip-addresses*   inet:ip-address
-        +--rw manufacturer?        string
-        +--rw model?               string
-        +--rw local-networks?      boolean
-        +--rw controller?          string
-        +--rw drop-count?          uint32
-
+        +--rw opaque-identifier*      string
+        +--rw drop-counts* []
+        |  +--rw (drop-type)?
+        |  |  +--:(blocked)
+        |  |  |  +--rw ace-name?   string
+        |  |  +--:(tcp-blocked)
+        |  |     +--rw ace-name?   string
+        |  +--rw direction?        enumeration
+        |  +--rw drop-count?       uint64
+        +--rw match-counts* []
+           +--rw ace-name?       string
+           +--rw packet-count?   uint64
 ~~~~~~~~~
 
 
@@ -217,16 +220,6 @@ module ietf-mud-reporter-extension {
           description
              "Restful endpoint for reporter information.";
           }
-        leaf frequency {
-          type uint32 
-	  {
-	    range "60..max";
-	  }
-          default 1440;
-          description
-            "The minimum period of time in minutes that a deployment
-             should report.";
-        }
       }
   }
 
@@ -267,6 +260,7 @@ module ietf-mud-reporter {
      lear@cisco.com
     ";
   description
+
     "This YANG module specifies the reporting format for MUD managers
      to use when they are reporting to manufacturers.
 
@@ -302,9 +296,9 @@ module ietf-mud-reporter {
     uses mud-reporter-grouping;
     description "Reporter Information.";
   }
-  
+
   grouping mud-reporter-grouping   {
-    
+
     description
       "MUD reporter container.";
     leaf mudurl {
@@ -316,38 +310,28 @@ module ietf-mud-reporter {
       key "time";
       description
         "individual records.";
+
+      leaf enforcement-point-id {
+        type string;
+        description
+           "Identifying information for the enforcement-point
+            (e.g. switch) that is making this report. This is  
+	    an opaque identifier. ";
+      }
+
       leaf time {
         type yang:timestamp;
         description
           "when this happened.";
       }
-      leaf opaqueidentifier {
-        type string;
-        description
-          "This is an identifier that maps to a particular
-           device.  Its value MUST NOT be mappable back to
-           any identifying information about the device.  It
-           may be a suitable hash, such as SHA256.";
-      }
-      leaf direction {
-        type enumeration {
-          enum to-device {
-            description
-              "packet was traveling toward the device";
-          }
-          enum from-device {
-            description
-              "packet was traveling away from the device";
-          }
-        }
-        description
-          "which way packet is going";
-      }
+
+
       leaf mycontrollers {
         type uint32;
         description
           "how many entries for my-controller.";
       }
+
       list controllers {
         key "uri";
         description
@@ -356,52 +340,29 @@ module ietf-mud-reporter {
           type inet:uri;
           description
             "the class URI of this controller";
+
         }
         leaf count {
           type uint32;
           description
             "number of devices serving this class.";
         }
-        leaf ipaddress {
-          type inet:ip-address;
-          description
-            "IP address of the controller.  Note that the MUD
-             reporter MUST NOT transmit this contents of this
-             node to the manufacturer.";
-        }
       }
+
       leaf samemanufacturers {
         type uint32;
         description
           "number of devices matching same
            manufacturer.";
       }
-      list manufacturers {
-        key "authority";
-        description
-          "list of models and how many there were.";
-        leaf authority {
-          type inet:host;
-          description
-            "the manufacturer domain";
-        }
-        leaf count {
-          type uint32;
-          description
-            "number of devices serving this class.";
-        }
-        leaf ipaddress {
-          type inet:ip-address;
-          description
-            "IP address of the controller.  Note that the MUD
-             reporter MUST NOT transmit this contents of this
-             node to the manufacturer.";
-        }
-      }
+
+
+
       list models {
         key "uri";
+
         description
-          "list of models and how many there were.";
+          "List of models and how many there were.";
         leaf uri {
           type inet:uri;
           description
@@ -411,6 +372,7 @@ module ietf-mud-reporter {
           type uint32;
           description
             "number of devices serving this class.";
+
         }
         leaf ipaddress {
           type inet:ip-address;
@@ -420,15 +382,18 @@ module ietf-mud-reporter {
              node to the manufacturer.";
         }
       }
+
       list domains {
         key "hostname";
         description
           "list of hosts, and ip addresses if known.";
+
         leaf hostname {
-          type inet:host;
+          type string;
           description
             "the host listed";
         }
+
         leaf-list ip-addresses {
           type inet:ip-address;
           description
@@ -436,45 +401,89 @@ module ietf-mud-reporter {
              known.";
         }
       }
-      uses class-drop-count;
+
+      leaf-list opaque-identifier {
+          type string;
+          description
+            "List of opaque identifiers 
+             for the devices generating this report. ";
+
+      }
+
+      list drop-counts {
+         uses drop-count;
+      }
+
+      list match-counts {
+        uses pass-count;
+      }
+    }
+
+  }
+
+
+  grouping pass-count {
+    description
+     "Count of packets for each passing MUD ACE. in the MUD file.
+      The ACE's are named with the <name of the ACL> / <name of ACE>";
+    leaf ace-name {
+      type string;
+      description
+             "Name of ACE";
+    }
+
+    leaf packet-count {
+      type uint64;
+      description
+       "Pass count (count of number of packets that matched
+        this ACE and made it through";
     }
   }
 
-  grouping class-drop-count {
+  grouping drop-count {
     description
-      "Destination fields of acl violating  packet are classfied.";
-    leaf manufacturer {
-      type string;
-      description
-        "manufacturer name";
-    }
-    leaf model {
-      type string;
-      description
-        "model name";
-    }
-    leaf local-networks {
-      type boolean;
-      description
-        "this packet matches the local networks
-         classification";
-    }
-    leaf controller {
-      type string;
-      description
-        "controller name";
-    }
+      "Violating packet related to this MUD file are classfied.";
+    choice drop-type {
+    case blocked {
+      leaf ace-name {
+         type string;
+         description
+          "No mud rule matched 
+           (has a special ace-name of NOMATCH)";
+        }
+      }
+    case tcp-blocked {
+      leaf ace-name {
+         type string;
+         description
+          "TCP connection initiated in the wrong direction.";
+        }
+      }
+     }
+     leaf direction {
+        type enumeration {
+          enum to-device {
+            description
+              "Packet was traveling toward the device";
+          }
+          enum from-device {
+            description
+              "Packet was traveling away from the device";
+          }
+        }
+        description
+          "which way packet is going";
+     }
+
     leaf drop-count {
-      type uint32;
+      type uint64;
       description
-        "number of packets dropped for this classification";
+        "Measure of dropped packets for this classification.";
     }
   }
 }
-
 <CODE ENDS>
 ~~~~~~~~~
-
 
 RESTful interface at the collector
 ==================================
