@@ -607,9 +607,190 @@ module ietf-mud-reporter-collector {
 Examples
 ========
 
-## Example 1 ##
+### Example 1 ###
 
-Consider a MUD File, with the following allowable interactions:
+MUD file with the following interactions is defined below:
+
+- Device may access www.antd.local on port 80 (protocol TCP).
+
+
+~~~~~~~~~
+
+{
+  "ietf-mud:mud": {
+    "mud-version": 1,
+    "mud-url": "https://mud-dns-test.antd.nist.gov/super1",
+    "last-update": "2019-04-10T23:49:33+00:00",
+    "cache-validity": 48,
+    "is-supported": true,
+    "systeminfo": "Test device",
+    "mfg-name": "NIST",
+    "documentation": "https://www.nist.gov",
+    "model-name": "super1",
+    "from-device-policy": {
+      "access-lists": {
+        "access-list": [
+          {
+            "name": "mud-14589-v4fr"
+          }
+        ]
+      }
+    },
+    "to-device-policy": {
+      "access-lists": {
+        "access-list": [
+          {
+            "name": "mud-14589-v4to"
+          }
+        ]
+      }
+    },
+    "ietf-mud-reporter-extension:reporter" :{
+          "report-uri" : "http://mud-dns-test.antd.nist.loal:8080"
+    }
+  },
+  "ietf-access-control-list:acls": {
+    "acl": [
+      {
+        "name": "mud-14589-v4to",
+        "type": "ipv4-acl-type",
+        "aces": {
+          "ace": [
+            {
+              "name": "cl0-todev",
+              "matches": {
+                "ipv4": {
+                  "ietf-acldns:src-dnsname": "www.nist.local",
+                  "protocol": 6
+                },
+                "tcp": {
+                  "ietf-mud:direction-initiated": "from-device",
+                  "source-port": {
+                    "operator": "eq",
+                    "port": 80
+                  }
+                }
+              },
+              "actions": {
+                "forwarding": "accept"
+              }
+            }
+          ]
+        }
+      },
+      {
+        "name": "mud-14589-v4fr",
+        "type": "ipv4-acl-type",
+        "aces": {
+          "ace": [
+            {
+              "name": "cl0-frdev",
+              "matches": {
+                "ipv4": {
+                  "ietf-acldns:dst-dnsname": "www.nist.local",
+                  "protocol": 6
+                },
+                "tcp": {
+                  "ietf-mud:direction-initiated": "from-device",
+                  "destination-port": {
+                    "operator": "eq",
+                    "port": 80
+                  }
+                }
+              },
+              "actions": {
+                "forwarding": "accept"
+              }
+            }
+          ]
+        }
+      }
+    ]
+  }
+}
+
+~~~~~~~~~
+
+Here is the report sent by the MUD reporter:
+
+~~~~~~~~~
+
+ {
+    "ietf-mud-reporter:mud-reporter": {
+        "mudurl": "https://mud-dns-test.antd.nist.gov/super1",
+        "mud-report": [
+            {
+                "time": 26099584,
+                "drop-counts": [
+                    {
+                        "reason": "nomatch",
+                        "direction": "to-device",
+                        "drop-count": 0
+                    },
+                    {
+                        "ace-name": "mud-14589-v4to/cl0-todev",
+                        "reason": "connection-block",
+                        "direction": "to-device",
+                        "drop-count": 0
+                    },
+                    {
+                        "reason": "nomatch",
+                        "direction": "from-device",
+                        "drop-count": 11
+                    }
+                ],
+                "match-counts": [
+                    {
+                        "packet-count": 11,
+                        "ace-name": "mud-14589-v4fr/cl0-frdev"
+                    },
+                    {
+                        "packet-count": 0,
+                        "ace-name": "mud-14589-v4to/cl0-todev"
+                    }
+                ],
+                "opaque-identifier": [
+                    "a4238d4cfe6674e6aec393ce7b7b8584",
+                    "a663ceb422bd32f3938c8eab999a61d1",
+                    "e12df9cabfbf3e222ffe83f717bc9f53"
+                ],
+                "enforcement-point-id": "openflow:1",
+                "controllers": [
+                    {
+                        "uri": "urn:ietf:params:mud:dns",
+                        "count": 1
+                    },
+                    {
+                        "uri": "urn:ietf:params:mud:ntp",
+                        "count": 1
+                    }
+                ],
+                "domains": [
+                    {
+                        "hostname": "www.nist.local",
+                        "ip-addresses": [
+                            "203.0.113.13",
+                            "203.0.113.15"
+                        ]
+                    }
+                ]
+            }
+        ]
+    }
+}
+
+~~~~~~~~~
+
+The following conculsions may be made using the information presented by the MUD reporter
+
+- There are three devices on the network that map to the given MUD URL.
+- Device issued 11 packets in access violation.
+- The DNS host name www.nist.local has resolved correctly to two IP addresses.
+- The device sent packets to the host but did not recieve a response (which indicates that there's possibly a firewall configuration issue or the server is down).
+
+## Example 2 ##
+
+MUD File, with the following allowable interactions:
 
 - Device may communicate with other hosts on the local network initiating outbound connections to port 800.
 - Device may field inbound TCP connections on port 8000.
