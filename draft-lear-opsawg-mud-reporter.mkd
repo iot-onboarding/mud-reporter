@@ -607,7 +607,7 @@ module ietf-mud-reporter-collector {
 Examples
 ========
 
-##Example 1##
+###Example 1###
 
 Consider a MUD File, with the following allowable interactions:
 
@@ -765,7 +765,7 @@ There is a single device on the network. The MUD file is shown below.
 
 ~~~~~~~~~
 
-### Case 1: The Device is operating correctly ### 
+#### Case 1: The Device is operating correctly ####
 
 The MUD reporter will generate and send reports that look as follows:
 
@@ -841,7 +841,7 @@ The MUD reporter will generate and send reports that look as follows:
 
 ~~~~~~~~~
 
-### Case 2: The Device is generating illegal connection attempts. ###  
+#### Case 2: The Device is generating illegal connection attempts. ####
 
 The MUD reporter will generate and send reports that look as follows:
 
@@ -915,7 +915,6 @@ The MUD reporter will generate and send reports that look as follows:
 }
 
 
-<CODE ENDS>
 ~~~~~~~~~
 
 
