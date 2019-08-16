@@ -235,6 +235,7 @@ module ietf-mud-reporter-extension {
   }
 }
 <CODE ENDS>
+
 ~~~~~~~~~
 
 
@@ -243,6 +244,7 @@ The Reporter record format
 --------------------------
 
 ~~~~~~~~~
+
 <CODE BEGINS>file "ietf-mud-reporter@2019-06-21.yang"
 
 
@@ -497,8 +499,9 @@ module ietf-mud-reporter {
         leaf ace-name {
           type string;
           description
-            "ACE name for the MUD ACE that specified the direction of initiation.
-            TCP connection initiated in the wrong direction.";
+            "ACE name for the MUD ACE that specified the 
+            direction of initiation. TCP connection initiated 
+            in the wrong direction.";
           }
        }
      }
@@ -615,7 +618,6 @@ There is a single device on the network. The MUD file is shown below.
 
 
 ~~~~~~~~~
-<CODE BEGINS>
 
 {
   "ietf-mud:mud": {
@@ -761,7 +763,6 @@ There is a single device on the network. The MUD file is shown below.
   }
 }
 
-<CODE ENDS>
 ~~~~~~~~~
 
 ### Case 1: The Device is operating correctly ### 
@@ -769,7 +770,6 @@ There is a single device on the network. The MUD file is shown below.
 The MUD reporter will generate and send reports that look as follows:
 
 ~~~~~~~~~
-<CODE BEGINS>
 
 {
     "ietf-mud-reporter:mud-reporter": {
@@ -779,13 +779,13 @@ The MUD reporter will generate and send reports that look as follows:
                 "time": 26098746,
                 "drop-counts": [
                     {
-                        "ace-name": "mud-53094-v4fr/loc1-frdev/TCP_DIRECTION_INBOUND",
+                        "ace-name": "mud-53094-v4fr/loc1-frdev",
                         "reason": "connection-block",
                         "direction": "to-device",
                         "drop-count": 0
                     },
                     {
-                        "ace-name": "mud-53094-v4to/loc0-todev/TCP_DIRECTION_OUTBOUND",
+                        "ace-name": "mud-53094-v4to/loc0-todev",
                         "reason": "connection-block",
                         "direction": "from-device",
                         "drop-count": 0
@@ -839,7 +839,6 @@ The MUD reporter will generate and send reports that look as follows:
 }
 
 
-<CODE ENDS>
 ~~~~~~~~~
 
 ### Case 2: The Device is generating illegal connection attempts. ###  
@@ -847,7 +846,6 @@ The MUD reporter will generate and send reports that look as follows:
 The MUD reporter will generate and send reports that look as follows:
 
 ~~~~~~~~~
-<CODE BEGINS>
 
 {
     "ietf-mud-reporter:mud-reporter": {
@@ -857,13 +855,13 @@ The MUD reporter will generate and send reports that look as follows:
                 "time": 26098746,
                 "drop-counts": [
                     {
-                        "ace-name": "mud-53094-v4fr/loc1-frdev/TCP_DIRECTION_INBOUND",
+                        "ace-name": "mud-53094-v4fr/loc1-frdev",
                         "reason": "connection-block",
                         "direction": "to-device",
                         "drop-count": 0
                     },
                     {
-                        "ace-name": "mud-53094-v4to/loc0-todev/TCP_DIRECTION_OUTBOUND",
+                        "ace-name": "mud-53094-v4to/loc0-todev",
                         "reason": "connection-block",
                         "direction": "from-device",
                         "drop-count": 10
