@@ -607,15 +607,14 @@ module ietf-mud-reporter-collector {
 Examples
 ========
 
-###Example 1###
+### Example 1 ###
 
 Consider a MUD File, with the following allowable interactions:
 
-Device may communicate with other hosts on the local network initiating outbound connections to port 800.
-Device may field inbound TCP connections on port 8000.
+- Device may communicate with other hosts on the local network initiating outbound connections to port 800.
+- Device may field inbound TCP connections on port 8000.
 
-There is a single device on the network. The MUD file is shown below.
-
+There is a single device on the network with this MUD URL. The MUD file is shown below.
 
 ~~~~~~~~~
 
