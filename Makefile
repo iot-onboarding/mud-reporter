@@ -11,11 +11,15 @@ clean:
 	rm -f draft-lear-opsawg-mud-reporter.txt
 	rm -f *.yang
 
+tree:
+	pyang --ietf -f tree ietf-mud-reporter.yang
 
 %.xml:	%.mkd
 	kramdown-rfc2629 $< > $@
 %.html %.txt:	%.xml
 	xml2rfc --html $<
 	xml2rfc --text $<
+
+
 
 
