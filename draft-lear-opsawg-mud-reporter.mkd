@@ -527,6 +527,7 @@ module ietf-mud-reporter {
 }
 
 <CODE ENDS>
+
 ~~~~~~~~~
 
 RESTful interface at the collector
@@ -613,6 +614,7 @@ Device may field inbound TCP connections on port 8000.
 There is a single device on the network. The MUD file is shown below.
 
 
+~~~~~~~~~
 <CODE BEGINS>
 
 {
@@ -760,11 +762,13 @@ There is a single device on the network. The MUD file is shown below.
 }
 
 <CODE ENDS>
+~~~~~~~~~
 
 ### Case 1: The Device is operating correctly ### 
 
 The MUD reporter will generate and send reports that look as follows:
 
+~~~~~~~~~
 <CODE BEGINS>
 
 {
@@ -836,11 +840,13 @@ The MUD reporter will generate and send reports that look as follows:
 
 
 <CODE ENDS>
+~~~~~~~~~
 
 ### Case 2: The Device is generating illegal connection attempts. ###  
 
 The MUD reporter will generate and send reports that look as follows:
 
+~~~~~~~~~
 <CODE BEGINS>
 
 {
@@ -912,6 +918,7 @@ The MUD reporter will generate and send reports that look as follows:
 
 
 <CODE ENDS>
+~~~~~~~~~
 
 
 
