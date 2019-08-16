@@ -586,14 +586,14 @@ module ietf-mud-reporter-collector {
       "Initial proposed standard.";
     reference
       "RFC XXXX: Extension for MUD Reporting";
-  }
+   }
     rpc post-mud-report {
       description
          "Rpc interface that must be supported by collection point.";
       input {
         container mud-report {
-	  uses  reporter:mud-reporter-grouping;
-	  description "MUD report";
+         uses  reporter:mud-reporter-grouping;
+         description "MUD report";
         }
       }
     }
@@ -607,7 +607,7 @@ module ietf-mud-reporter-collector {
 Examples
 ========
 
-### Example 1 ###
+## Example 1 ##
 
 Consider a MUD File, with the following allowable interactions:
 
@@ -764,7 +764,7 @@ There is a single device on the network with this MUD URL. The MUD file is shown
 
 ~~~~~~~~~
 
-#### Case 1: The Device is operating correctly ####
+### Case 1: The Device is operating correctly ###
 
 The MUD reporter will generate and send reports that look as follows:
 
@@ -840,7 +840,7 @@ The MUD reporter will generate and send reports that look as follows:
 
 ~~~~~~~~~
 
-#### Case 2: The Device is generating illegal connection attempts. ####
+### Case 2: The Device is generating illegal connection attempts. ###
 
 The MUD reporter will generate and send reports that look as follows:
 
