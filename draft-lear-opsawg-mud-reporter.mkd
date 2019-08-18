@@ -117,7 +117,8 @@ module: ietf-mud-controller-candidate
 Finally the logging format is defined as follows:
 
 ~~~~~~~~~
-ietf-mud-reporter
+
+module: ietf-mud-reporter
   +--rw mud-reporter
      +--rw mudurl?       inet:uri
      +--rw mud-report* [time]
@@ -129,17 +130,18 @@ ietf-mud-reporter
         |  +--rw count?   uint32
         +--rw samemanufacturers?      uint32
         +--rw models* [uri]
-        |  +--rw uri          inet:uri
+        |  +--rw uri      inet:uri
+        |  +--rw count?   uint32
+        +--rw manufacturers* [authority]
+        |  +--rw authority    string
         |  +--rw count?       uint32
-        |  +--rw ipaddress?   inet:ip-address
         +--rw domains* [hostname]
         |  +--rw hostname        string
         |  +--rw ip-addresses*   inet:ip-address
         +--rw opaque-identifier*      string
         +--rw drop-counts* []
-        |  +--rw (drop-type)?
-        |  |  +--:(blocked)
-        |  |  |  +--rw ace-name?   string
+        |  +--rw (drop-reason)?
+        |  |  +--:(nomatch)
         |  |  +--:(tcp-blocked)
         |  |     +--rw ace-name?   string
         |  +--rw direction?        enumeration
@@ -147,6 +149,7 @@ ietf-mud-reporter
         +--rw match-counts* []
            +--rw ace-name?       string
            +--rw packet-count?   uint64
+
 ~~~~~~~~~
 
 
@@ -176,6 +179,8 @@ module ietf-mud-reporter-extension {
      WG List: opsawg@ietf.org
      Author: Eliot Lear
      lear@cisco.com
+     Author: Mudumbai Ranganathan
+     mranga@nist.gov
     ";
   description
 
@@ -230,6 +235,7 @@ module ietf-mud-reporter-extension {
   }
 }
 <CODE ENDS>
+
 ~~~~~~~~~
 
 
@@ -238,7 +244,10 @@ The Reporter record format
 --------------------------
 
 ~~~~~~~~~
+
 <CODE BEGINS>file "ietf-mud-reporter@2019-06-21.yang"
+
+
 module ietf-mud-reporter {
   yang-version 1.1;
   namespace "urn:ietf:params:xml:ns:yang:ietf-mud-reporter";
@@ -269,6 +278,7 @@ module ietf-mud-reporter {
 
      Redistribution and use in source and binary forms, with or
      without modification, is permitted pursuant to, and subject to
+
      the license terms contained in, the Simplified BSD License set
      forth in Section 4.c of the IETF Trust's Legal Provisions
      Relating to IETF Documents
@@ -315,8 +325,9 @@ module ietf-mud-reporter {
         type string;
         description
            "Identifying information for the enforcement-point
-            (e.g. switch) that is making this report. This is  
-	    an opaque identifier. ";
+            (e.g. switch) that is making this report. This is
+            an opaque identifier. ";
+
       }
 
       leaf time {
@@ -365,6 +376,7 @@ module ietf-mud-reporter {
           "List of models and how many there were.";
         leaf uri {
           type inet:uri;
+
           description
             "the URI of this model";
         }
@@ -374,12 +386,24 @@ module ietf-mud-reporter {
             "number of devices serving this class.";
 
         }
-        leaf ipaddress {
-          type inet:ip-address;
+      }
+
+      list manufacturers {
+        key "authority";
+
+        description
+          "List of models and how many there were.";
+        leaf authority {
+          type string;
           description
-            "IP address of the controller.  Note that the MUD
-             reporter MUST NOT transmit this contents of this
-             node to the manufacturer.";
+            "the URI of this model";
+
+        }
+        leaf count {
+          type uint32;
+          description
+            "number of devices serving this class.";
+
         }
       }
 
@@ -405,16 +429,22 @@ module ietf-mud-reporter {
       leaf-list opaque-identifier {
           type string;
           description
-            "List of opaque identifiers 
+            "List of opaque identifiers
              for the devices generating this report. ";
 
       }
 
       list drop-counts {
+         description
+            "List of packet counts for dropped packets 
+             and the reason why they were dropped";
          uses drop-count;
       }
 
       list match-counts {
+         description
+            "List of packet counts for packets that were 
+             not dropped.";
         uses pass-count;
       }
     }
@@ -443,23 +473,39 @@ module ietf-mud-reporter {
   grouping drop-count {
     description
       "Violating packet related to this MUD file are classfied.";
-    choice drop-type {
-    case blocked {
-      leaf ace-name {
-         type string;
-         description
-          "No mud rule matched 
-           (has a special ace-name of NOMATCH)";
-        }
+    leaf reason {
+        description 
+           "Reason code - tells the packets were dropped";
+        type enumeration {
+            enum nomatch {
+               description 
+               "No matching mud rule was found";
+            }
+            enum connection-block {
+                  description 
+                  "Connection was blocked";
+           }
+       }
+    }
+
+    choice drop-reason {
+      description
+        "Deatiled reasons for packet being dropped";
+      case nomatch {
+          description
+           "No mud rule matched.";
       }
-    case tcp-blocked {
-      leaf ace-name {
-         type string;
-         description
-          "TCP connection initiated in the wrong direction.";
-        }
-      }
+      case tcp-blocked {
+        leaf ace-name {
+          type string;
+          description
+            "ACE name for the MUD ACE that specified the 
+            direction of initiation. TCP connection initiated 
+            in the wrong direction.";
+          }
+       }
      }
+
      leaf direction {
         type enumeration {
           enum to-device {
@@ -482,7 +528,9 @@ module ietf-mud-reporter {
     }
   }
 }
+
 <CODE ENDS>
+
 ~~~~~~~~~
 
 RESTful interface at the collector
@@ -538,14 +586,14 @@ module ietf-mud-reporter-collector {
       "Initial proposed standard.";
     reference
       "RFC XXXX: Extension for MUD Reporting";
-  }
+   }
     rpc post-mud-report {
       description
          "Rpc interface that must be supported by collection point.";
       input {
         container mud-report {
-	  uses  reporter:mud-reporter-grouping;
-	  description "MUD report";
+         uses  reporter:mud-reporter-grouping;
+         description "MUD report";
         }
       }
     }
@@ -559,7 +607,497 @@ module ietf-mud-reporter-collector {
 Examples
 ========
 
-TBD
+### Example 1 ###
+
+MUD file with the following interactions is defined below:
+
+- Device may access www.antd.local on port 80 (protocol TCP).
+
+
+~~~~~~~~~
+
+{
+  "ietf-mud:mud": {
+    "mud-version": 1,
+    "mud-url": "https://mud-dns-test.antd.nist.gov/super1",
+    "last-update": "2019-04-10T23:49:33+00:00",
+    "cache-validity": 48,
+    "is-supported": true,
+    "systeminfo": "Test device",
+    "mfg-name": "NIST",
+    "documentation": "https://www.nist.gov",
+    "model-name": "super1",
+    "from-device-policy": {
+      "access-lists": {
+        "access-list": [
+          {
+            "name": "mud-14589-v4fr"
+          }
+        ]
+      }
+    },
+    "to-device-policy": {
+      "access-lists": {
+        "access-list": [
+          {
+            "name": "mud-14589-v4to"
+          }
+        ]
+      }
+    },
+    "ietf-mud-reporter-extension:reporter" :{
+          "report-uri" : "http://mud-dns-test.antd.nist.loal:8080"
+    }
+  },
+  "ietf-access-control-list:acls": {
+    "acl": [
+      {
+        "name": "mud-14589-v4to",
+        "type": "ipv4-acl-type",
+        "aces": {
+          "ace": [
+            {
+              "name": "cl0-todev",
+              "matches": {
+                "ipv4": {
+                  "ietf-acldns:src-dnsname": "www.nist.local",
+                  "protocol": 6
+                },
+                "tcp": {
+                  "ietf-mud:direction-initiated": "from-device",
+                  "source-port": {
+                    "operator": "eq",
+                    "port": 80
+                  }
+                }
+              },
+              "actions": {
+                "forwarding": "accept"
+              }
+            }
+          ]
+        }
+      },
+      {
+        "name": "mud-14589-v4fr",
+        "type": "ipv4-acl-type",
+        "aces": {
+          "ace": [
+            {
+              "name": "cl0-frdev",
+              "matches": {
+                "ipv4": {
+                  "ietf-acldns:dst-dnsname": "www.nist.local",
+                  "protocol": 6
+                },
+                "tcp": {
+                  "ietf-mud:direction-initiated": "from-device",
+                  "destination-port": {
+                    "operator": "eq",
+                    "port": 80
+                  }
+                }
+              },
+              "actions": {
+                "forwarding": "accept"
+              }
+            }
+          ]
+        }
+      }
+    ]
+  }
+}
+
+~~~~~~~~~
+
+Here is the report sent by the MUD reporter:
+
+~~~~~~~~~
+
+ {
+    "ietf-mud-reporter:mud-reporter": {
+        "mudurl": "https://mud-dns-test.antd.nist.gov/super1",
+        "mud-report": [
+            {
+                "time": 26099584,
+                "drop-counts": [
+                    {
+                        "reason": "nomatch",
+                        "direction": "to-device",
+                        "drop-count": 0
+                    },
+                    {
+                        "ace-name": "mud-14589-v4to/cl0-todev",
+                        "reason": "connection-block",
+                        "direction": "to-device",
+                        "drop-count": 0
+                    },
+                    {
+                        "reason": "nomatch",
+                        "direction": "from-device",
+                        "drop-count": 11
+                    }
+                ],
+                "match-counts": [
+                    {
+                        "packet-count": 11,
+                        "ace-name": "mud-14589-v4fr/cl0-frdev"
+                    },
+                    {
+                        "packet-count": 0,
+                        "ace-name": "mud-14589-v4to/cl0-todev"
+                    }
+                ],
+                "opaque-identifier": [
+                    "a4238d4cfe6674e6aec393ce7b7b8584",
+                    "a663ceb422bd32f3938c8eab999a61d1",
+                    "e12df9cabfbf3e222ffe83f717bc9f53"
+                ],
+                "enforcement-point-id": "openflow:1",
+                "controllers": [
+                    {
+                        "uri": "urn:ietf:params:mud:dns",
+                        "count": 1
+                    },
+                    {
+                        "uri": "urn:ietf:params:mud:ntp",
+                        "count": 1
+                    }
+                ],
+                "domains": [
+                    {
+                        "hostname": "www.nist.local",
+                        "ip-addresses": [
+                            "203.0.113.13",
+                            "203.0.113.15"
+                        ]
+                    }
+                ]
+            }
+        ]
+    }
+}
+
+~~~~~~~~~
+
+The following conculsions may be made using the information presented by the MUD reporter
+
+- There are three devices on the network that map to the given MUD URL.
+- Device issued 11 packets in access violation.
+- The DNS host name www.nist.local has resolved correctly to two IP addresses.
+- The device sent packets to the host but did not recieve a response (which indicates that there's possibly a firewall configuration issue or the server is down).
+
+## Example 2 ##
+
+MUD File, with the following allowable interactions:
+
+- Device may communicate with other hosts on the local network initiating outbound connections to port 800.
+- Device may field inbound TCP connections on port 8000.
+
+There is a single device on the network with this MUD URL. The MUD file is shown below.
+
+~~~~~~~~~
+
+{
+  "ietf-mud:mud": {
+    "mud-version": 1,
+    "mud-url": "https://thingy.company.com/super1",
+    "last-update": "2018-07-09T04:29:05+02:00",
+    "cache-validity": 48,
+    "is-supported": true,
+    "systeminfo": "The NIST toaster",
+    "from-device-policy": {
+      "access-lists": {
+        "access-list": [
+          {
+            "name": "mud-53094-v4fr"
+          }
+        ]
+      }
+    },
+    "to-device-policy": {
+      "access-lists": {
+        "access-list": [
+          {
+            "name": "mud-53094-v4to"
+          }
+        ]
+      }
+    },
+    "ietf-mud-reporter-extension:reporter" :{
+          "report-uri" : "http://thingy.company.com/mud-reports"
+    }
+  },
+  "ietf-access-control-list:acls": {
+    "acl": [
+      {
+        "name": "mud-53094-v4to",
+        "type": "ipv4-acl-type",
+        "aces": {
+          "ace": [
+            {
+              "name": "loc0-todev",
+              "matches": {
+                "ietf-mud:mud": {
+                  "local-networks": [
+                    null
+                  ]
+                },
+                "ipv4": {
+                  "protocol": 6
+                },
+                "tcp": {
+                  "ietf-mud:direction-initiated": "from-device",
+                  "source-port": {
+                    "operator": "eq",
+                    "port": 800
+                  }
+                }
+              },
+              "actions": {
+                "forwarding": "accept"
+              }
+            },
+            {
+              "name": "loc1-todev",
+              "matches": {
+                "ietf-mud:mud": {
+                  "local-networks": [
+                    null
+                  ]
+                },
+                "ipv4": {
+                  "protocol": 6
+                },
+                "tcp": {
+                  "ietf-mud:direction-initiated": "to-device",
+                  "destination-port": {
+                    "operator": "eq",
+                    "port": 8000
+                  }
+                }
+              },
+              "actions": {
+                "forwarding": "accept"
+              }
+            }
+          ]
+        }
+      },
+      {
+        "name": "mud-53094-v4fr",
+        "type": "ipv4-acl-type",
+        "aces": {
+          "ace": [
+            {
+              "name": "loc0-frdev",
+              "matches": {
+                "ietf-mud:mud": {
+                  "local-networks": [
+                    null
+                  ]
+                },
+                "ipv4": {
+                  "protocol": 6
+                },
+                "tcp": {
+                  "ietf-mud:direction-initiated": "from-device",
+                  "destination-port": {
+                    "operator": "eq",
+                    "port": 800
+                  }
+                }
+              },
+              "actions": {
+                "forwarding": "accept"
+              }
+            },
+            {
+              "name": "loc1-frdev",
+              "matches": {
+                "ietf-mud:mud": {
+                  "local-networks": [
+                    null
+                  ]
+                },
+                "ipv4": {
+                  "protocol": 6
+                },
+                "tcp": {
+                  "ietf-mud:direction-initiated": "to-device",
+                  "source-port": {
+                    "operator": "eq",
+                    "port": 8000
+                  }
+                }
+              },
+              "actions": {
+                "forwarding": "accept"
+              }
+            }
+          ]
+        }
+      }
+    ]
+  }
+}
+
+~~~~~~~~~
+
+### Case 1: The Device is operating correctly ###
+
+The MUD reporter will generate and send reports that look as follows:
+
+~~~~~~~~~
+
+{
+    "ietf-mud-reporter:mud-reporter": {
+        "mudurl": "https://thingy.company.com/super1",
+        "mud-report": [
+            {
+                "time": 26098746,
+                "drop-counts": [
+                    {
+                        "ace-name": "mud-53094-v4fr/loc1-frdev",
+                        "reason": "connection-block",
+                        "direction": "to-device",
+                        "drop-count": 0
+                    },
+                    {
+                        "ace-name": "mud-53094-v4to/loc0-todev",
+                        "reason": "connection-block",
+                        "direction": "from-device",
+                        "drop-count": 0
+                    },
+                    {
+                        "reason": "nomatch",
+                        "direction": "to-device",
+                        "drop-count": 0
+                    },
+                    {
+                        "reason": "nomatch",
+                        "direction": "from-device",
+                        "drop-count": 0
+                    }
+                ],
+                "match-counts": [
+                    {
+                        "packet-count": 13,
+                        "ace-name": "mud-53094-v4to/loc0-todev"
+                    },
+                    {
+                        "packet-count": 14,
+                        "ace-name": "mud-53094-v4fr/loc0-frdev"
+                    },
+                    {
+                        "packet-count": 14,
+                        "ace-name": "mud-53094-v4to/loc1-todev"
+                    },
+                    {
+                        "packet-count": 13,
+                        "ace-name": "mud-53094-v4fr/loc1-frdev"
+                    }
+                ],
+                "opaque-identifier": [
+                    "6f6719b593a7136cfa7826400ab962f1"
+                ],
+                "enforcement-point-id": "openflow:1",
+                "controllers": [
+                    {
+                        "uri": "urn:ietf:params:mud:dns",
+                        "count": 1
+                    },
+                    {
+                        "uri": "urn:ietf:params:mud:ntp",
+                        "count": 1
+                    }
+                ]
+            }
+        ]
+    }
+}
+
+
+~~~~~~~~~
+
+### Case 2: The Device is generating illegal connection attempts. ###
+
+The MUD reporter will generate and send reports that look as follows:
+
+~~~~~~~~~
+
+{
+    "ietf-mud-reporter:mud-reporter": {
+        "mudurl": "https://thingy.company.com/super1",
+        "mud-report": [
+            {
+                "time": 26098746,
+                "drop-counts": [
+                    {
+                        "ace-name": "mud-53094-v4fr/loc1-frdev",
+                        "reason": "connection-block",
+                        "direction": "to-device",
+                        "drop-count": 0
+                    },
+                    {
+                        "ace-name": "mud-53094-v4to/loc0-todev",
+                        "reason": "connection-block",
+                        "direction": "from-device",
+                        "drop-count": 10
+                    },
+                    {
+                        "reason": "nomatch",
+                        "direction": "to-device",
+                        "drop-count": 0
+                    },
+                    {
+                        "reason": "nomatch",
+                        "direction": "from-device",
+                        "drop-count": 0
+                    }
+                ],
+                "match-counts": [
+                    {
+                        "packet-count": 0,
+                        "ace-name": "mud-53094-v4to/loc0-todev"
+                    },
+                    {
+                        "packet-count": 0,
+                        "ace-name": "mud-53094-v4fr/loc0-frdev"
+                    },
+                    {
+                        "packet-count": 0,
+                        "ace-name": "mud-53094-v4to/loc1-todev"
+                    },
+                    {
+                        "packet-count": 0,
+                        "ace-name": "mud-53094-v4fr/loc1-frdev"
+                    }
+                ],
+                "opaque-identifier": [
+                    "6f6719b593a7136cfa7826400ab962f1"
+                ],
+                "enforcement-point-id": "openflow:1",
+                "controllers": [
+                    {
+                        "uri": "urn:ietf:params:mud:dns",
+                        "count": 1
+                    },
+                    {
+                        "uri": "urn:ietf:params:mud:ntp",
+                        "count": 1
+                    }
+                ]
+            }
+        ]
+    }
+}
+
+
+~~~~~~~~~
+
+
 
 Privacy Considerations
 ======================
